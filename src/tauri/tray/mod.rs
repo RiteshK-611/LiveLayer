@@ -1,26 +1,33 @@
+use crate::commands::date_widget::center_to_position;
+use crate::commands::stop_video_wallpaper;
+use crate::state::AppState;
+use crate::types::DateWidgetSettings;
 use tauri::{
+    AppHandle, Manager, Wry,
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager, AppHandle, Wry,
 };
-use crate::state::AppState;
-use crate::commands::stop_video_wallpaper;
-use crate::commands::date_widget::center_to_position;
-use crate::types::DateWidgetSettings;
 
 pub fn create_tray_menu(app: &tauri::App) -> tauri::Result<()> {
     // Create tray menu
     let show = MenuItem::with_id(app, "show", "Show Settings", true, None::<&str>)?;
     let hide = MenuItem::with_id(app, "hide", "Hide Settings", true, None::<&str>)?;
-    let stop_video = MenuItem::with_id(app, "stop_video", "Stop Video Wallpaper", true, None::<&str>)?;
-    let date_widget = MenuItem::with_id(app, "date_widget", "Toggle Date Widget", true, None::<&str>)?;
+    let stop_video = MenuItem::with_id(
+        app,
+        "stop_video",
+        "Stop Video Wallpaper",
+        true,
+        None::<&str>,
+    )?;
+    let date_widget =
+        MenuItem::with_id(app, "date_widget", "Toggle Date Widget", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&show, &hide, &stop_video, &date_widget, &quit])?;
     // Create tray icon with event handling
     let _tray = TrayIconBuilder::new()
         .menu(&menu)
         .icon(app.default_window_icon().unwrap().clone())
-        .tooltip("Wallora")
+        .tooltip("LiveLayer")
         .on_menu_event(move |app, event| {
             handle_tray_menu_event(app, event.id().as_ref());
         })
@@ -74,9 +81,14 @@ fn handle_tray_menu_event(app: &AppHandle<Wry>, event_id: &str) {
                         position_x: pos_x,
                         position_y: pos_y,
                         center_x: default_center_x,
-                        center_y: default_center_y
+                        center_y: default_center_y,
                     };
-                    let _ = crate::commands::create_date_widget(app_clone.clone(), state, default_settings).await;
+                    let _ = crate::commands::create_date_widget(
+                        app_clone.clone(),
+                        state,
+                        default_settings,
+                    )
+                    .await;
                 }
             });
         }

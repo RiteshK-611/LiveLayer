@@ -1,16 +1,16 @@
 [[bin]]
-name = "wallora"
+name = "livelayer"
 path = "src/tauri/main.rs"
 
 [package]
-name = "wallora"
-version = "1.3.3"
-description = "Wallora brings beautiful wallpapers and a clock overlay to your desktop."
+name = "livelayer"
+version = "2.3.3"
+description = "LiveLayer brings beautiful wallpapers and a clock overlay to your desktop."
 authors = ["riteshk-611"]
 edition = "2024"
 license = "AGPL-3.0"
-repository = "https://github.com/riteshk-611/wallora"
-documentation = "https://github.com/riteshk-611/wallora#readme"
+repository = "https://github.com/riteshk-611/livelayer"
+documentation = "https://github.com/riteshk-611/livelayer#readme"
 keywords = ["wallpaper", "desktop", "customization", "video-wallpaper", "date-widget"]
 rust-version = "1.88"
 build = "scripts/build.rs"

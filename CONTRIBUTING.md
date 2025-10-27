@@ -1,6 +1,6 @@
-# Contributing to Wallora
+# Contributing to LiveLayer
 
-We love your input! We want to make contributing to Wallora as easy and transparent as possible, whether it's:
+We love your input! We want to make contributing to LiveLayer as easy and transparent as possible, whether it's:
 
 - Reporting a bug
 - Discussing the current state of the code
@@ -27,8 +27,8 @@ Pull requests are the best way to propose changes to the codebase. We actively w
 
 ```bash
 # Clone your fork
-git clone https://github.com/riteshk-611/wallora.git
-cd wallora
+git clone https://github.com/riteshk-611/livelayer.git
+cd livelayer
 
 # Install dependencies
 npm install
@@ -60,7 +60,7 @@ npm run tauri build
 
 ## Bug Reports
 
-We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/riteshk-611/wallora/issues/new).
+We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/riteshk-611/livelayer/issues/new).
 
 **Great Bug Reports** tend to have:
 

@@ -1,4 +1,4 @@
-name: Build & Release Wallora
+name: Build & Release LiveLayer
 
 on:
   push:
@@ -42,7 +42,7 @@ jobs:
           echo "Tag: $tag"
 
       # --- Build the app (includes .exe, .msi, .msix) ---
-      - name: Build Wallora (Tauri)
+      - name: Build LiveLayer (Tauri)
         run: npm run tauri build
 
       - name: Get Artifacts Paths
@@ -57,13 +57,13 @@ jobs:
       - name: Upload MSI Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Wallora-MSI
+          name: LiveLayer-MSI
           path: ${{ steps.artifacts.outputs.msi }}
 
       - name: Upload EXE Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Wallora-EXE
+          name: LiveLayer-EXE
           path: ${{ steps.artifacts.outputs.exe }}
 
       # --- Create Draft GitHub Release with Artifacts ---
@@ -71,12 +71,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: Wallora ${{ steps.version.outputs.tag }}
+          name: LiveLayer ${{ steps.version.outputs.tag }}
           body: |
-            ## 🎨 Wallora ${{ steps.version.outputs.version }}
-            
-            Wallora brings beautiful wallpapers and a clock overlay to your desktop.
-            
+            ## 🎨 LiveLayer ${{ steps.version.outputs.version }}
+
+            LiveLayer brings beautiful wallpapers and a clock overlay to your desktop.
+
             ### ✨ Features
             - **Dynamic Wallpapers**: Support for images, videos, and GIFs
             - **Live Wallpapers**: Video wallpapers that play behind your desktop
@@ -84,24 +84,24 @@ jobs:
             - **Auto-Change**: Randomized slideshow functionality
             - **System Tray**: Minimize to system tray for seamless operation
             - **Cross-Platform**: Windows, macOS, and Linux support
-            
+
             ### 📥 Download
-            - **Windows Installer (Recommended)**: `Wallora_${{ steps.version.outputs.version }}_x64-setup.exe`
-            - **Windows MSI**: `Wallora_${{ steps.version.outputs.version }}_x64_en-US.msi`
-            
+            - **Windows Installer (Recommended)**: `LiveLayer_${{ steps.version.outputs.version }}_x64-setup.exe`
+            - **Windows MSI**: `LiveLayer_${{ steps.version.outputs.version }}_x64_en-US.msi`
+
             ### 💻 System Requirements
             - **Windows**: Windows 10 or later
             - **macOS**: macOS 10.15 or later  
             - **Linux**: Modern Linux distribution with X11 or Wayland
-            
+
             ### 🚀 Installation
             1. Download the appropriate installer for your system
             2. Run the installer and follow the setup wizard
-            3. Launch Wallora from your applications menu
-            
+            3. Launch LiveLayer from your applications menu
+
             ---
-            
-            **Full Changelog**: https://github.com/riteshk-611/wallora/commits/${{ steps.version.outputs.tag }}
+
+            **Full Changelog**: https://github.com/riteshk-611/livelayer/commits/${{ steps.version.outputs.tag }}
           prerelease: false
           files: |
             ${{ steps.artifacts.outputs.msi }}
