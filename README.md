@@ -1,4 +1,4 @@
-# LiveLayer - Premium Wallpaper Manager
+# LiveLayer
 
 A modern, minimalistic wallpaper manager with video support and customizable date widgets.
 
@@ -55,6 +55,6 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE) file for details.
 
-## Supportlivelayer
+## Support LiveLayer
 
 If you encounter any issues or have questions, please [open an issue](https://github.com/riteshk-611/livelayer/issues) on GitHub.
