@@ -1,9 +1,9 @@
 {
-  "name": "wallora",
+  "name": "livelayer",
   "private": true,
-  "version": "1.3.3",
+  "version": "2.3.3",
   "type": "module",
-  "description": "Wallora brings beautiful wallpapers and a clock overlay to your desktop.",
+  "description": "LiveLayer brings beautiful wallpapers and a clock overlay to your desktop.",
   "author": {
     "name": "riteshk-611",
     "email": "riteshkokam@gmail.com",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/riteshk-611/wallora.git"
+    "url": "https://github.com/riteshk-611/livelayer.git"
   },
   "keywords": [
     "wallpaper",

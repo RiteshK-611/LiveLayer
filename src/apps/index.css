@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Megrim&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Borel&display=swap");
 
 :root {
   /* Dark theme colors to match screenshots */
@@ -68,11 +68,11 @@ body {
 }
 
 .header-left h1 {
-  font-family: "Megrim", cursive;
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-family: "Borel", cursive;
+  font-size: 1.2rem;
+  font-weight: 400;
   color: var(--text-primary);
-  margin-bottom: 0.25rem;
+  margin-top: 0.80rem;
 }
 
 .app-subtitle {

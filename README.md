@@ -1,4 +1,4 @@
-# Wallora - Premium Wallpaper Manager
+# LiveLayer - Premium Wallpaper Manager
 
 A modern, minimalistic wallpaper manager with video support and customizable date widgets.
 
@@ -15,14 +15,14 @@ A modern, minimalistic wallpaper manager with video support and customizable dat
 
 ### Download
 
-Download the latest release from the [Releases](https://github.com/riteshk-611/wallora/releases) page.
+Download the latest release from the [Releases](https://github.com/riteshk-611/livelayer/releases) page.
 
 ### Build from Source
 
-```bashwallora
-# Cwallorarepository
-git clone https://github.com/riteshk-611/wallora.git
-cd wallora
+```bashlivelayer
+# Clivelayerrepository
+git clone https://github.com/riteshk-611/livelayer.git
+cd livelayer
 
 # Install dependencies
 npm install
@@ -55,6 +55,6 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE) file for details.
 
-## Supportwallora
+## Supportlivelayer
 
-If you encounter any issues or have questions, please [open an issue](https://github.com/riteshk-611/wallora/issues) on GitHub.
+If you encounter any issues or have questions, please [open an issue](https://github.com/riteshk-611/livelayer/issues) on GitHub.

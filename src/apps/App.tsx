@@ -111,7 +111,7 @@ function App() {
             justifyContent: "center",
           }}>
           <div className="spinner"></div>
-          <span>Loading Wallora...</span>
+          <span>Loading LiveLayer...</span>
         </div>
       </div>
     );
@@ -123,11 +123,11 @@ function App() {
         <div className="header-left">
           <div style={{ display: "flex", alignItems: "center" }}>
             <img
-              src="/wallora.png"
-              alt="Wallora Logo"
-              style={{ width: "36px", height: "36px" }}
+              src="/livelayer.png"
+              alt="LiveLayer Logo"
+              style={{ width: "32px", height: "32px" }}
             />
-            <h1>allora</h1>
+            <h1>livelayer</h1>
           </div>
         </div>
         <div className="header-actions">
