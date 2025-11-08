@@ -98,6 +98,7 @@ fn main() {
             hide_date_widget,
             show_date_widget,
             close_date_widget,
+            toggle_date_widget,
             update_widget_property,
             save_app_state,
             load_app_state,

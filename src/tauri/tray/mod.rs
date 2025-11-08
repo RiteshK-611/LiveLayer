@@ -1,7 +1,5 @@
-use crate::commands::date_widget::center_to_position;
 use crate::commands::stop_video_wallpaper;
 use crate::state::AppState;
-use crate::types::DateWidgetSettings;
 use tauri::{
     AppHandle, Manager, Wry,
     menu::{Menu, MenuItem},
@@ -64,31 +62,8 @@ fn handle_tray_menu_event(app: &AppHandle<Wry>, event_id: &str) {
             let app_clone = app.clone();
             tauri::async_runtime::spawn(async move {
                 if let Some(state) = app_clone.try_state::<AppState>() {
-                    let default_center_x = 400.0; // Default center X
-                    let default_center_y = 300.0; // Default center Y
-                    let (pos_x, pos_y) = center_to_position(default_center_x, default_center_y);
-
-                    // Create default settings for tray toggle
-                    let default_settings = DateWidgetSettings {
-                        enabled: true,
-                        locked: false,
-                        show_time: true,
-                        bold_text: false,
-                        scale: 1.0,
-                        color: "#FFFFFF".to_string(),
-                        font: "Megrim".to_string(),
-                        alignment: "center".to_string(),
-                        position_x: pos_x,
-                        position_y: pos_y,
-                        center_x: default_center_x,
-                        center_y: default_center_y,
-                    };
-                    let _ = crate::commands::create_date_widget(
-                        app_clone.clone(),
-                        state,
-                        default_settings,
-                    )
-                    .await;
+                    // Use the shared toggle command
+                    let _ = crate::commands::toggle_date_widget(state, app_clone.clone()).await;
                 }
             });
         }

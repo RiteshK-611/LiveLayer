@@ -30,39 +30,13 @@ const DateWidget: React.FC<DateWidgetProps> = ({
     try {
       setLoading(true);
 
+      // Use the shared toggle command from Rust
+      await invoke("toggle_date_widget");
+      
+      // Update local state to reflect the toggle
       const state: AppPersistentState = await invoke("load_app_state");
-      const latestWidgetSettings = state.date_widget_settings || {
-        position_x: 100,
-        position_y: 100,
-        scale: 1.0,
-        color: "#FFFFFF",
-        font: "Arial",
-        alignment: "center",
-        show_time: true,
-        bold_text: false,
-        locked: false,
-      };
-
-      if (settings.enabled) {
-        await invoke("close_date_widget");
-        const newSettings = {
-          ...settings,
-          enabled: false,
-          position_x: latestWidgetSettings.position_x,
-          position_y: latestWidgetSettings.position_y,
-        };
-        onSettingsChange(newSettings);
-      } else {
-        const newSettings = {
-          ...settings,
-          enabled: true,
-          position_x: latestWidgetSettings.position_x,
-          position_y: latestWidgetSettings.position_y,
-        };
-        await invoke("create_date_widget", {
-          settings: newSettings,
-        });
-        onSettingsChange(newSettings);
+      if (state.date_widget_settings) {
+        onSettingsChange(state.date_widget_settings);
       }
     } catch (error) {
       console.error("Error toggling date widget:", error);
