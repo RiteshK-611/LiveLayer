@@ -498,7 +498,6 @@ input:checked + .toggle-slider:before {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  margin-top: var(--spacing-md);
   font-size: 0.875rem;
   color: var(--text-secondary);
   font-weight: 500;
