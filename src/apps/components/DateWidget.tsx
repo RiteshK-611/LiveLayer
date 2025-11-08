@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
   AppPersistentState,
@@ -17,6 +17,24 @@ const DateWidget: React.FC<DateWidgetProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const pollState = async () => {
+      try {
+        const state: AppPersistentState = await invoke("load_app_state");
+        if (state.date_widget_settings) {
+          if (state.date_widget_settings.enabled !== settings.enabled) {
+            onSettingsChange(state.date_widget_settings);
+          }
+        }
+      } catch (error) {
+        console.error("Error polling date widget state:", error);
+      }
+    };
+
+    const interval = setInterval(pollState, 1000);
+    return () => clearInterval(interval);
+  }, [settings.enabled, onSettingsChange]);
+
   const fontOptions: FontOption[] = [
     { name: "Megrim", value: "Megrim", type: "google" },
     { name: "Major Mono Display", value: "Major Mono Display", type: "google" },
@@ -32,7 +50,7 @@ const DateWidget: React.FC<DateWidgetProps> = ({
 
       // Use the shared toggle command from Rust
       await invoke("toggle_date_widget");
-      
+
       // Update local state to reflect the toggle
       const state: AppPersistentState = await invoke("load_app_state");
       if (state.date_widget_settings) {
