@@ -277,6 +277,55 @@ pub async fn close_date_widget(state: State<'_, AppState>, app: AppHandle<Wry>) 
 }
 
 #[tauri::command]
+pub async fn toggle_date_widget(
+    state: State<'_, AppState>,
+    app: AppHandle<Wry>,
+) -> Result<String, String> {
+    // Load current app state to check if widget is enabled
+    let current_state = crate::commands::load_app_state(app.clone()).await.unwrap_or_default();
+    let current_settings = current_state.date_widget_settings;
+    
+    // Check if widget is currently enabled
+    let is_enabled = current_settings.as_ref().map(|s| s.enabled).unwrap_or(false);
+    
+    if is_enabled {
+        // Widget is enabled, so close it
+        close_date_widget(state, app).await
+    } else {
+        // Widget is disabled, so create it with saved or default settings
+        let default_center_x = 400.0;
+        let default_center_y = 300.0;
+        let (pos_x, pos_y) = center_to_position(default_center_x, default_center_y);
+        
+        let settings = if let Some(saved_settings) = current_settings {
+            // Use saved settings but ensure enabled is true
+            DateWidgetSettings {
+                enabled: true,
+                ..saved_settings
+            }
+        } else {
+            // Create default settings
+            DateWidgetSettings {
+                enabled: true,
+                locked: false,
+                show_time: true,
+                bold_text: false,
+                scale: 1.0,
+                color: "#FFFFFF".to_string(),
+                font: "Megrim".to_string(),
+                alignment: "center".to_string(),
+                position_x: pos_x,
+                position_y: pos_y,
+                center_x: default_center_x,
+                center_y: default_center_y,
+            }
+        };
+        
+        create_date_widget(app, state, settings).await
+    }
+}
+
+#[tauri::command]
 pub async fn update_widget_property(
     state: State<'_, AppState>,
     app: AppHandle<Wry>,

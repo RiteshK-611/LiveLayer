@@ -4,7 +4,7 @@ path = "src/tauri/main.rs"
 
 [package]
 name = "livelayer"
-version = "2.3.3"
+version = "2.4.3"
 description = "LiveLayer brings beautiful wallpapers and a clock overlay to your desktop."
 authors = ["riteshk-611"]
 edition = "2024"

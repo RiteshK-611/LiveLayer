@@ -18,6 +18,7 @@ const WallpaperManager: React.FC<WallpaperManagerProps> = ({
   const [wallpapers, setWallpapers] = useState<WallpaperInfo[]>([]);
   const [currentWallpaper, setCurrentWallpaper] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [processingWallpaper, setProcessingWallpaper] = useState<string>("");
   const [slideshowInterval, setSlideshowInterval] = useState<ReturnType<
     typeof setInterval
   > | null>(null);
@@ -147,6 +148,7 @@ const WallpaperManager: React.FC<WallpaperManagerProps> = ({
   const handleSetWallpaper = async (wallpaper: WallpaperInfo) => {
     try {
       setLoading(true);
+      setProcessingWallpaper(wallpaper.path);
 
       if (
         currentWallpaper &&
@@ -184,6 +186,7 @@ const WallpaperManager: React.FC<WallpaperManagerProps> = ({
       console.error("Error setting wallpaper:", error);
       alert(`Error setting wallpaper: ${error}`);
     } finally {
+      setProcessingWallpaper("");
       setLoading(false);
     }
   };
@@ -348,6 +351,11 @@ const WallpaperManager: React.FC<WallpaperManagerProps> = ({
                   {renderPreview(wallpaper)}
                 </div>
                 <span className="wallpaper-name">{wallpaper.name}</span>
+                {loading && processingWallpaper === wallpaper.path && (
+                  <div className="loading-indicator">
+                    <div className="spinner"></div>
+                  </div>
+                )}
                 <button
                   className="icon-btn delete-btn"
                   onClick={(e) => {
@@ -361,13 +369,6 @@ const WallpaperManager: React.FC<WallpaperManagerProps> = ({
           </div>
         )}
       </div>
-
-      {loading && (
-        <div className="loading-indicator">
-          <div className="spinner"></div>
-          <span>Processing selected files...</span>
-        </div>
-      )}
     </div>
   );
 };
