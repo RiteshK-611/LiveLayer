@@ -4,9 +4,9 @@ path = "src/tauri/main.rs"
 
 [package]
 name = "livelayer"
-version = "2.4.3"
+version = "2.4.4"
 description = "LiveLayer brings beautiful wallpapers and a clock overlay to your desktop."
-authors = ["riteshk-611"]
+authors = ["Ritesh Kokam <riteshk-611>"]
 edition = "2024"
 license = "AGPL-3.0"
 repository = "https://github.com/riteshk-611/livelayer"
@@ -44,4 +44,4 @@ panic = "abort"
 codegen-units = 1
 lto = true
 opt-level = "s"
-strip = true   
+strip = true

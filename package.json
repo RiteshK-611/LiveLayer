@@ -1,7 +1,7 @@
 {
   "name": "livelayer",
   "private": true,
-  "version": "2.4.3",
+  "version": "2.4.4",
   "type": "module",
   "description": "LiveLayer brings beautiful wallpapers and a clock overlay to your desktop.",
   "author": {
