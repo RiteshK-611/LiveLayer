@@ -11,7 +11,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "msi", "msix"],
+    "targets": ["nsis", "msi"],
     "icon": ["assets/livelayer.ico", "assets/livelayer.png"],
     "category": "Utility",
     "publisher": "Ritesh Kokam",
