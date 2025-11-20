@@ -50,7 +50,7 @@ jobs:
         shell: powershell
         run: |
           $cert = New-SelfSignedCertificate -Type Custom `
-            -Subject "CN=Ritesh Kokam, O=Ritesh Kokam, C=US" `
+            -Subject "CN=Origo Labs, O=Ritesh Kokam, C=IN" `
             -KeyUsage DigitalSignature `
             -FriendlyName "LiveLayer Code Signing" `
             -CertStoreLocation "Cert:\CurrentUser\My" `
@@ -141,11 +141,11 @@ jobs:
                    xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10">
             <Identity Name="com.livelayer.app"
                       Version="$msixVersion"
-                      Publisher="CN=Ritesh Kokam, O=Ritesh Kokam, C=US"
+                      Publisher="CN=Origo Labs, O=Ritesh Kokam, C=IN"
                       ProcessorArchitecture="x64" />
             <Properties>
               <DisplayName>LiveLayer</DisplayName>
-              <PublisherDisplayName>Ritesh Kokam</PublisherDisplayName>
+              <PublisherDisplayName>Origo Labs</PublisherDisplayName>
               <Logo>Assets\livelayer.png</Logo>
               <Description>LiveLayer brings beautiful wallpapers and a clock overlay to your desktop.</Description>
             </Properties>
