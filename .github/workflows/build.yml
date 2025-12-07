@@ -45,19 +45,21 @@ jobs:
       - name: Build LiveLayer (Tauri)
         run: npm run tauri build
 
-      # --- Create Self-Signed Certificate for MSIX ---
+      # --- Create Self-Signed Certificate for MSIX (matches Microsoft Store Publisher ID) ---
       - name: Create Self-Signed Certificate
         shell: powershell
         run: |
+          # Use the exact Publisher ID from Microsoft Partner Center
           $cert = New-SelfSignedCertificate -Type Custom `
-            -Subject "CN=Origo Labs, O=Ritesh Kokam, C=IN" `
+            -Subject "CN=AF9F1417-D505-42C3-9840-BEDC19A00F14" `
             -KeyUsage DigitalSignature `
-            -FriendlyName "LiveLayer Code Signing" `
+            -FriendlyName "LiveLayer Code Signing (Microsoft Store)" `
             -CertStoreLocation "Cert:\CurrentUser\My" `
             -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
           
           $thumbprint = $cert.Thumbprint
           Write-Host "Certificate Thumbprint: $thumbprint"
+          Write-Host "Publisher: CN=AF9F1417-D505-42C3-9840-BEDC19A00F14"
           echo "CERT_THUMBPRINT=$thumbprint" >> $env:GITHUB_ENV
           
           # Export certificate
@@ -139,9 +141,9 @@ jobs:
                    xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
                    xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
                    xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10">
-            <Identity Name="com.livelayer.app"
+            <Identity Name="OrigoLabs.LiveLayer"
                       Version="$msixVersion"
-                      Publisher="CN=Origo Labs, O=Ritesh Kokam, C=IN"
+                      Publisher="CN=AF9F1417-D505-42C3-9840-BEDC19A00F14"
                       ProcessorArchitecture="x64" />
             <Properties>
               <DisplayName>LiveLayer</DisplayName>
@@ -223,6 +225,7 @@ jobs:
           }
           
           Write-Host "Using signtool: $signtool"
+          Write-Host "Signing with Publisher: CN=AF9F1417-D505-42C3-9840-BEDC19A00F14"
           
           # Sign the MSIX package
           & $signtool sign /fd SHA256 /a /f "certificate.pfx" /p $env:CERT_PASSWORD $msixPath
@@ -233,6 +236,7 @@ jobs:
           }
           
           Write-Host "MSIX package signed successfully"
+          Write-Host "NOTE: For local testing, install the certificate first. For Store submission, Microsoft will re-sign."
 
       - name: Get Artifacts Paths
         id: artifacts
@@ -304,8 +308,9 @@ jobs:
 
             **For MSIX (Microsoft Store Submission):**
             - Download the MSIX file for Microsoft Store submission
-            - The MSIX is self-signed for testing - Microsoft will re-sign during certification
-            - For local testing: Enable Developer Mode in Windows Settings
+            - The MSIX is self-signed with Publisher: `CN=AF9F1417-D505-42C3-9840-BEDC19A00F14`
+            - Package Identity: `OrigoLabs.LiveLayer`
+            - For local testing: Enable Developer Mode and install the certificate first
 
             ---
 
