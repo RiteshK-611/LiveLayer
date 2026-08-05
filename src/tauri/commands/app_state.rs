@@ -1,5 +1,5 @@
 use crate::types::{AppPersistentState, DateWidgetSettings, WallpaperInfo, WallpaperSettings};
-use tauri::{AppHandle, Wry};
+use tauri::{AppHandle, Emitter, Wry};
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_store::StoreExt;
 
@@ -91,7 +91,13 @@ pub async fn update_date_widget_state(
 ) -> Result<String, String> {
     let mut current_state = load_app_state(app.clone()).await.unwrap_or_default();
     current_state.date_widget_settings = Some(settings);
-    save_app_state(app, current_state).await
+    save_app_state(app.clone(), current_state.clone()).await?;
+    app.emit(
+        "date-widget-state-changed",
+        current_state.date_widget_settings,
+    )
+    .map_err(|error| error.to_string())?;
+    Ok("Date widget state updated".to_string())
 }
 
 #[tauri::command]

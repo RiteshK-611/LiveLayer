@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import {
   AppPersistentState,
   DateWidgetSettings,
@@ -18,22 +19,14 @@ const DateWidget: React.FC<DateWidgetProps> = ({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const pollState = async () => {
-      try {
-        const state: AppPersistentState = await invoke("load_app_state");
-        if (state.date_widget_settings) {
-          if (state.date_widget_settings.enabled !== settings.enabled) {
-            onSettingsChange(state.date_widget_settings);
-          }
-        }
-      } catch (error) {
-        console.error("Error polling date widget state:", error);
-      }
-    };
-
-    const interval = setInterval(pollState, 1000);
-    return () => clearInterval(interval);
-  }, [settings.enabled, onSettingsChange]);
+    let unlisten: (() => void) | undefined;
+    listen<DateWidgetSettings | null>("date-widget-state-changed", ({ payload }) => {
+      if (payload) onSettingsChange(payload);
+    }).then((stop) => {
+      unlisten = stop;
+    });
+    return () => unlisten?.();
+  }, [onSettingsChange]);
 
   const fontOptions: FontOption[] = [
     { name: "Megrim", value: "Megrim", type: "google" },
