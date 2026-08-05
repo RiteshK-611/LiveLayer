@@ -431,6 +431,7 @@ input:checked + .toggle-slider:before {
   border-radius: 3px;
   background: var(--border-color);
   outline: none;
+  appearance: none;
   -webkit-appearance: none;
 }
 

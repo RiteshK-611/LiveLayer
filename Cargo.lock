@@ -2033,6 +2033,9 @@ checksum = "241eaef5fd12c88705a01fc1066c48c4b36e0dd4377dcdc7ec3942cea7a69956"
 name = "livelayer"
 version = "2.4.5"
 dependencies = [
+ "gdk",
+ "gtk",
+ "objc2 0.6.1",
  "serde",
  "serde_json",
  "tauri",

@@ -149,16 +149,7 @@ pub async fn create_date_widget(
         println!("Position after show: x={}, y={}", pos_after_show.x, pos_after_show.y);
     }
 
-    // DISABLE Windows platform code temporarily to test
-    #[cfg(target_os = "windows")]
-    {
-        println!("Skipping Windows platform code for position testing");
-        // Commenting out to isolate the issue        
-        let date_window_clone = date_window.clone();
-        let _ = tokio::task::spawn_blocking(move || {
-            crate::platform::windows::set_widget_on_desktop(&date_window_clone)
-        }).await;
-    }
+    crate::platform::set_window_as_desktop_underlay(&date_window, settings.locked)?;
     
     #[cfg(debug_assertions)]
     if let Ok(pos_after_delay) = date_window.outer_position() {
@@ -351,6 +342,9 @@ pub async fn update_widget_property(
                 value_js = value_js
             );
             window.eval(&js).map_err(|e| format!("Failed: {}", e))?;
+            if key == "locked" {
+                crate::platform::set_window_as_desktop_underlay(&window, value == "true")?;
+            }
         } else {
             return Err("Date widget window not found".to_string());     
         }

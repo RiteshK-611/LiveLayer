@@ -1,18 +1,33 @@
-// macOS-specific functionality can be added here
-// For example, native macOS wallpaper APIs or Cocoa integrations
-
 #[cfg(target_os = "macos")]
-pub fn set_macos_wallpaper(file_path: &str) -> Result<(), String> {
-    use std::process::Command;
-    
-    let output = Command::new("osascript")
-        .arg("-e")
-        .arg(format!("tell application \"Finder\" to set desktop picture to POSIX file \"{}\"", file_path))
-        .output()
-        .map_err(|e| format!("Failed to execute osascript: {}", e))?;
+pub fn set_desktop_underlay(window: &tauri::WebviewWindow, underlay: bool) -> Result<(), String> {
+    use objc2::{msg_send, runtime::AnyObject};
+    use std::{ffi::c_void, os::raw::c_ulong};
 
-    if !output.status.success() {
-        return Err("Failed to set wallpaper on macOS".to_string());
+    #[link(name = "CoreGraphics", kind = "framework")]
+    unsafe extern "C" {
+        fn CGWindowLevelForKey(key: i32) -> i32;
+    }
+
+    let ns_window = window.ns_window().map_err(|error| error.to_string())? as *mut c_void as *mut AnyObject;
+
+    unsafe {
+        let level = if underlay {
+            // CGWindowLevelKey::DesktopWindow keeps the window behind ordinary app windows.
+            CGWindowLevelForKey(2) - 1
+        } else {
+            // CGWindowLevelKey::NormalWindow restores an interactive window.
+            CGWindowLevelForKey(4)
+        };
+        let (): () = msg_send![ns_window, setLevel: level];
+
+        let behavior: c_ulong = msg_send![ns_window, collectionBehavior];
+        let underlay_behavior = 1 << 0 | 1 << 4 | 1 << 6;
+        let behavior = if underlay {
+            behavior | underlay_behavior
+        } else {
+            behavior & !underlay_behavior
+        };
+        let (): () = msg_send![ns_window, setCollectionBehavior: behavior];
     }
 
     Ok(())

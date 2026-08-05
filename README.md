@@ -55,7 +55,7 @@ Download the latest release from the [Releases](https://github.com/riteshk-611/l
 
 **Available installers:**
 - Windows: `.msi` or `.exe` (NSIS installer)
-- macOS: `.dmg` or `.app`
+- macOS: `.dmg` or `.app` (Intel and Apple Silicon)
 - Linux: `.AppImage`, `.deb`, or `.rpm`
 
 ### Build from Source
@@ -236,9 +236,9 @@ LiveLayer/
   - Auto-start preference
 
 **Platform Integration:**
-- Windows: Native wallpaper APIs via `winapi` crate
-- macOS: AppleScript for wallpaper setting
-- Linux: Desktop environment detection (GNOME, KDE, XFCE, etc.)
+- Windows: Native wallpaper APIs and Explorer desktop underlay
+- macOS: AppleScript static wallpapers and native AppKit desktop underlay
+- Linux: Desktop environment static wallpaper commands and GTK desktop underlay
 
 ## Known Issues
 
@@ -280,8 +280,8 @@ LiveLayer/
 - **Windows**: Windows 10 or later (x64)
 - **macOS**: macOS 10.15 (Catalina) or later (Intel and Apple Silicon)
 - **Linux**: Modern distribution with GTK 3.24+ and WebKitGTK 4.1
-  - X11 or Wayland display server
-  - Tested on Ubuntu 20.04+, Fedora 35+, Arch Linux
+  - X11 is the supported display server for live wallpapers and desktop widgets.
+  - Wayland support depends on the compositor; it may ignore desktop window hints.
 
 **Hardware Requirements:**
 - 100 MB disk space

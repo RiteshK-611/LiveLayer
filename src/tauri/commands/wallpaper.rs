@@ -5,9 +5,6 @@ use crate::utils::file_utils::{get_mime_type, is_gif_type};
 use crate::commands::update_wallpaper_state;
 use tauri::Manager;
 
-#[cfg(target_os = "windows")]
-use crate::platform::windows::set_wallpaper_behind_desktop_sync;
-
 #[tauri::command]
 pub async fn set_static_wallpaper(file_path: String) -> Result<String, String> {
     let path = PathBuf::from(&file_path);
@@ -19,34 +16,34 @@ pub async fn set_static_wallpaper(file_path: String) -> Result<String, String> {
     #[cfg(target_os = "windows")]
     {
         use std::ffi::CString;
-        use winapi::um::winuser::{SystemParametersInfoA, SPI_SETDESKWALLPAPER, SPIF_UPDATEINIFILE, SPIF_SENDCHANGE};
-        
-        let path_cstring = CString::new(file_path.clone())
-            .map_err(|_| "Invalid file path".to_string())?;
-        
-        unsafe {
-            let result = SystemParametersInfoA(
+        use winapi::um::winuser::{
+            SystemParametersInfoA, SPI_SETDESKWALLPAPER, SPIF_SENDCHANGE, SPIF_UPDATEINIFILE,
+        };
+
+        let path = CString::new(file_path.clone()).map_err(|_| "Invalid file path".to_string())?;
+        if unsafe {
+            SystemParametersInfoA(
                 SPI_SETDESKWALLPAPER,
                 0,
-                path_cstring.as_ptr() as *mut _,
+                path.as_ptr() as *mut _,
                 SPIF_UPDATEINIFILE | SPIF_SENDCHANGE,
-            );
-            
-            if result == 0 {
-                return Err("Failed to set wallpaper".to_string());
-            }
+            )
+        } == 0
+        {
+            return Err("Failed to set wallpaper".to_string());
         }
     }
 
     #[cfg(target_os = "macos")]
     {
-        use std::process::Command;
-        
-        let output = Command::new("osascript")
+        let output = std::process::Command::new("osascript")
             .arg("-e")
-            .arg(format!("tell application \"Finder\" to set desktop picture to POSIX file \"{}\"", file_path))
+            .arg(format!(
+                "tell application \"Finder\" to set desktop picture to POSIX file \"{}\"",
+                file_path
+            ))
             .output()
-            .map_err(|e| format!("Failed to execute osascript: {}", e))?;
+            .map_err(|error| format!("Failed to execute osascript: {error}"))?;
 
         if !output.status.success() {
             return Err("Failed to set wallpaper on macOS".to_string());
@@ -55,25 +52,20 @@ pub async fn set_static_wallpaper(file_path: String) -> Result<String, String> {
 
     #[cfg(target_os = "linux")]
     {
-        use std::process::Command;
-        
-        let desktop_commands = [
-            ("gsettings", vec!["set", "org.gnome.desktop.background", "picture-uri", &format!("file://{}", file_path)]),
+        let commands = [
+            ("gsettings", vec!["set", "org.gnome.desktop.background", "picture-uri", &format!("file://{file_path}")]),
             ("feh", vec!["--bg-fill", &file_path]),
             ("nitrogen", vec!["--set-scaled", &file_path]),
             ("xfconf-query", vec!["-c", "xfce4-desktop", "-p", "/backdrop/screen0/monitor0/workspace0/last-image", "-s", &file_path]),
         ];
 
-        let mut success = false;
-        for (cmd, args) in desktop_commands.iter() {
-            if Command::new(cmd).args(args).output().is_ok() {
-                success = true;
-                break;
-            }
-        }
-        
-        if !success {
-            return Err("Failed to set wallpaper on Linux".to_string());
+        if !commands.iter().any(|(command, arguments)| {
+            std::process::Command::new(command)
+                .args(arguments)
+                .status()
+                .is_ok_and(|status| status.success())
+        }) {
+            return Err("No supported Linux wallpaper command succeeded".to_string());
         }
     }
 
@@ -157,34 +149,7 @@ pub async fn create_video_wallpaper(
     video_window.show()
         .map_err(|e| format!("Failed to show window: {}", e))?;
 
-    // Wait for window to be ready
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-
-    // Windows-specific: Use blocking task to avoid Send issues
-    #[cfg(target_os = "windows")]
-    {
-        let video_window_clone = video_window.clone();
-        
-        // Spawn blocking task for Windows API calls - no Send trait required
-        let result = tokio::task::spawn_blocking(move || {
-            set_wallpaper_behind_desktop_sync(&video_window_clone)
-        }).await;
-        
-        match result {
-            Ok(Ok(_)) => {
-                #[cfg(debug_assertions)]
-                println!("Successfully set wallpaper behind desktop");
-            }
-            Ok(Err(_e)) => {
-                #[cfg(debug_assertions)]
-                eprintln!("Failed to set wallpaper behind desktop: {}", _e);
-            }
-            Err(_e) => {
-                #[cfg(debug_assertions)]
-                eprintln!("Failed to execute desktop integration task: {}", _e);
-            }
-        }
-    }
+    crate::platform::set_window_as_desktop_underlay(&video_window, true)?;
 
     // Save wallpaper state
     let file_extension = path.extension()

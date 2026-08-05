@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+         xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+         IgnorableNamespaces="uap rescap desktop">
+  <Identity Name="OrigoLabs.LiveLayer" Version="__VERSION__" Publisher="CN=AF9F1417-D505-42C3-9840-BEDC19A00F14" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>LiveLayer</DisplayName>
+    <PublisherDisplayName>Origo Labs</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <Description>LiveLayer brings beautiful wallpapers and a clock overlay to your desktop.</Description>
+  </Properties>
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+  <Applications>
+    <Application Id="LiveLayer" Executable="livelayer.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="LiveLayer"
+                          Description="LiveLayer brings beautiful wallpapers and a clock overlay to your desktop."
+                          BackgroundColor="transparent"
+                          Square150x150Logo="Assets\Square150x150Logo.png"
+                          Square44x44Logo="Assets\AppList.png" />
+    </Application>
+  </Applications>
+</Package>

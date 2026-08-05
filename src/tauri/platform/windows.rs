@@ -1,6 +1,6 @@
 #[cfg(target_os = "windows")]
 pub fn set_wallpaper_behind_desktop_sync(window: &tauri::WebviewWindow) -> Result<(), String> {
-    use winapi::um::winuser::{FindWindowA, FindWindowExA, PostMessageW, SetParent};
+    use winapi::um::{errhandlingapi::{GetLastError, SetLastError}, winuser::{FindWindowA, FindWindowExA, PostMessageW, SetParent}};
     use winapi::shared::windef::HWND;
     use std::ffi::CString;
 
@@ -59,7 +59,8 @@ pub fn set_wallpaper_behind_desktop_sync(window: &tauri::WebviewWindow) -> Resul
 
     // Set window as child of WorkerW
     unsafe {
-        if SetParent(hwnd, worker_w).is_null() {
+        SetLastError(0);
+        if SetParent(hwnd, worker_w).is_null() && GetLastError() != 0 {
             return Err("Failed to set window parent".to_string());
         }
     }
@@ -68,42 +69,15 @@ pub fn set_wallpaper_behind_desktop_sync(window: &tauri::WebviewWindow) -> Resul
 }
 
 #[cfg(target_os = "windows")]
-pub fn set_widget_on_desktop(window: &tauri::WebviewWindow) -> Result<(), String> {
-    use winapi::um::winuser::{
-        SetWindowPos, SetParent, FindWindowA,
-        HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW,
-        WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_LAYERED, SetWindowLongA, GWL_EXSTYLE, GetWindowLongA
-    };
-    use winapi::shared::windef::HWND;
-    use std::ffi::CString;
+pub fn set_desktop_underlay(window: &tauri::WebviewWindow, underlay: bool) -> Result<(), String> {
+    if underlay {
+        set_wallpaper_behind_desktop_sync(window)
+    } else {
+        use winapi::shared::windef::HWND;
+        use winapi::um::winuser::SetParent;
 
-    // Get window handle
-    let hwnd = window.hwnd().map_err(|e| e.to_string())?.0 as HWND;
-
-    // Get Progman window (desktop)
-    let progman_class = CString::new("Progman").map_err(|e| e.to_string())?;
-    let progman = unsafe { FindWindowA(progman_class.as_ptr(), std::ptr::null()) };
-    
-    
-
-    // Set extended window styles to prevent activation, hide from taskbar, and enable transparency
-    unsafe {
-        let current_style = GetWindowLongA(hwnd, GWL_EXSTYLE) as u32;
-        SetWindowLongA(hwnd, GWL_EXSTYLE, (current_style | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | WS_EX_LAYERED) as i32);
-        
-        if !progman.is_null() {
-            // Try to set as child of Progman (desktop level)
-            SetParent(hwnd, progman);
-        }
-
-        // Position window appropriately
-        SetWindowPos(
-            hwnd,
-            HWND_TOPMOST,
-            0, 0, 0, 0,
-            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW
-        );
+        let hwnd = window.hwnd().map_err(|error| error.to_string())?.0 as HWND;
+        unsafe { SetParent(hwnd, std::ptr::null_mut()) };
+        Ok(())
     }
-
-    Ok(())
 }

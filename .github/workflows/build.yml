@@ -4,319 +4,66 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   build-and-release:
-    runs-on: windows-latest
-    permissions:
-      contents: write
-      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            args: ""
+          - os: macos-latest
+            args: "--target aarch64-apple-darwin"
+          - os: macos-latest
+            args: "--target x86_64-apple-darwin"
+          - os: ubuntu-22.04
+            args: ""
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          override: true
-          components: rustfmt, clippy
+          targets: ${{ startsWith(matrix.os, 'macos') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-      # --- Extract version from package.json ---
-      - name: Extract version from package.json
+      - run: npm ci
+
+      - name: Get version
         id: version
         shell: bash
-        run: |
-          version=$(node -p "require('./package.json').version")
-          tag="v$version"
-          echo "version=$version" >> $GITHUB_OUTPUT
-          echo "tag=$tag" >> $GITHUB_OUTPUT
-          echo "Version: $version"
-          echo "Tag: $tag"
+        run: echo "version=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
 
-      # --- Build the app (includes .exe, .msi) ---
-      - name: Build LiveLayer (Tauri)
-        run: npm run tauri build
-
-      # --- Create Self-Signed Certificate for MSIX (matches Microsoft Store Publisher ID) ---
-      - name: Create Self-Signed Certificate
-        shell: powershell
-        run: |
-          # Use the exact Publisher ID from Microsoft Partner Center
-          $cert = New-SelfSignedCertificate -Type Custom `
-            -Subject "CN=AF9F1417-D505-42C3-9840-BEDC19A00F14" `
-            -KeyUsage DigitalSignature `
-            -FriendlyName "LiveLayer Code Signing (Microsoft Store)" `
-            -CertStoreLocation "Cert:\CurrentUser\My" `
-            -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
-          
-          $thumbprint = $cert.Thumbprint
-          Write-Host "Certificate Thumbprint: $thumbprint"
-          Write-Host "Publisher: CN=AF9F1417-D505-42C3-9840-BEDC19A00F14"
-          echo "CERT_THUMBPRINT=$thumbprint" >> $env:GITHUB_ENV
-          
-          # Export certificate
-          $password = ConvertTo-SecureString -String "TempPassword123!" -Force -AsPlainText
-          Export-PfxCertificate -Cert "Cert:\CurrentUser\My\$thumbprint" `
-            -FilePath "certificate.pfx" `
-            -Password $password
-          
-          echo "CERT_PASSWORD=TempPassword123!" >> $env:GITHUB_ENV
-
-      # --- Extract EXE and prepare for MSIX ---
-      - name: Extract Installer Files
-        shell: powershell
-        run: |
-          $version = node -p "require('./package.json').version"
-          $exePath = Get-ChildItem -Path "target/release/bundle/nsis/*.exe" | Select-Object -First 1 -ExpandProperty FullName
-          
-          Write-Host "EXE Path: $exePath"
-          Write-Host "Version: $version"
-          
-          # Create working directory
-          New-Item -ItemType Directory -Force -Path "msix_build"
-          
-          # Extract NSIS installer (7zip style)
-          Write-Host "Extracting installer..."
-          & "C:\Program Files\7-Zip\7z.exe" x "$exePath" -o"msix_build\extracted" -y
-          
-          # If 7z fails, try alternative method
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "7zip extraction failed, using alternative method..."
-            # Run installer in silent mode to a temp directory
-            $tempInstall = "msix_build\temp_install"
-            New-Item -ItemType Directory -Force -Path $tempInstall
-            Start-Process -FilePath $exePath -ArgumentList "/S", "/D=$tempInstall" -Wait -NoNewWindow
-            Copy-Item -Path "$tempInstall\*" -Destination "msix_build\extracted" -Recurse -Force
-          }
-          
-          echo "VERSION=$version" >> $env:GITHUB_ENV
-          echo "EXE_PATH=$exePath" >> $env:GITHUB_ENV
-
-      # --- Create MSIX Package Structure ---
-      - name: Create MSIX Package
-        shell: powershell
-        run: |
-          $version = $env:VERSION
-          $msixVersion = "$version.0"
-          
-          Write-Host "Creating MSIX package structure..."
-          
-          # Create MSIX directory structure
-          $msixRoot = "msix_package"
-          New-Item -ItemType Directory -Force -Path "$msixRoot"
-          New-Item -ItemType Directory -Force -Path "$msixRoot\Assets"
-          
-          # Copy application files from extracted installer
-          Write-Host "Copying application files..."
-          
-          # Find the main executable in extracted files
-          $appFiles = Get-ChildItem -Path "msix_build\extracted" -Recurse -Filter "*.exe" | 
-                      Where-Object { $_.Name -like "*livelayer*" -or $_.Name -eq "LiveLayer.exe" } |
-                      Select-Object -First 1
-          
-          if ($appFiles) {
-            $exeDir = $appFiles.DirectoryName
-            Copy-Item -Path "$exeDir\*" -Destination $msixRoot -Recurse -Force
-          } else {
-            # Fallback: copy everything
-            Copy-Item -Path "msix_build\extracted\*" -Destination $msixRoot -Recurse -Force
-          }
-          
-          # Copy icon assets
-          Copy-Item -Path "assets\livelayer.ico" -Destination "$msixRoot\Assets\livelayer.ico" -ErrorAction SilentlyContinue
-          Copy-Item -Path "assets\livelayer.png" -Destination "$msixRoot\Assets\livelayer.png" -ErrorAction SilentlyContinue
-          
-          # Create AppxManifest.xml
-          $manifest = @"
-          <?xml version="1.0" encoding="utf-8"?>
-          <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
-                   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
-                   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-                   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10">
-            <Identity Name="OrigoLabs.LiveLayer"
-                      Version="$msixVersion"
-                      Publisher="CN=AF9F1417-D505-42C3-9840-BEDC19A00F14"
-                      ProcessorArchitecture="x64" />
-            <Properties>
-              <DisplayName>LiveLayer</DisplayName>
-              <PublisherDisplayName>Origo Labs</PublisherDisplayName>
-              <Logo>Assets\livelayer.png</Logo>
-              <Description>LiveLayer brings beautiful wallpapers and a clock overlay to your desktop.</Description>
-            </Properties>
-            <Resources>
-              <Resource Language="en-us" />
-            </Resources>
-            <Dependencies>
-              <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.0" />
-            </Dependencies>
-            <Capabilities>
-              <rescap:Capability Name="runFullTrust" />
-            </Capabilities>
-            <Applications>
-              <Application Id="LiveLayer" Executable="livelayer.exe" EntryPoint="Windows.FullTrustApplication">
-                <uap:VisualElements DisplayName="LiveLayer"
-                                    Description="LiveLayer brings beautiful wallpapers and a clock overlay to your desktop."
-                                    BackgroundColor="transparent"
-                                    Square150x150Logo="Assets\livelayer.png"
-                                    Square44x44Logo="Assets\livelayer.png">
-                </uap:VisualElements>
-              </Application>
-            </Applications>
-          </Package>
-          "@
-          
-          $manifest | Out-File -FilePath "$msixRoot\AppxManifest.xml" -Encoding utf8
-          
-          Write-Host "MSIX package structure created"
-
-      # --- Build MSIX using makeappx ---
-      - name: Build MSIX Package
-        shell: powershell
-        run: |
-          $version = $env:VERSION
-          
-          # Find makeappx.exe from Windows SDK
-          $makeappx = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\" -Recurse -Filter "makeappx.exe" | 
-                      Where-Object { $_.FullName -like "*\x64\*" } | 
-                      Select-Object -First 1 -ExpandProperty FullName
-          
-          if (-not $makeappx) {
-            Write-Error "makeappx.exe not found!"
-            exit 1
-          }
-          
-          Write-Host "Using makeappx: $makeappx"
-          
-          # Create MSIX package
-          $outputMsix = "LiveLayer_${version}_x64.msix"
-          
-          & $makeappx pack /d "msix_package" /p $outputMsix /l
-          
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Failed to create MSIX package"
-            exit 1
-          }
-          
-          Write-Host "MSIX package created: $outputMsix"
-          echo "MSIX_PATH=$outputMsix" >> $env:GITHUB_ENV
-
-      # --- Sign MSIX Package ---
-      - name: Sign MSIX Package
-        shell: powershell
-        run: |
-          $msixPath = $env:MSIX_PATH
-          
-          # Find signtool.exe from Windows SDK
-          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\" -Recurse -Filter "signtool.exe" | 
-                      Where-Object { $_.FullName -like "*\x64\*" } | 
-                      Select-Object -First 1 -ExpandProperty FullName
-          
-          if (-not $signtool) {
-            Write-Error "signtool.exe not found!"
-            exit 1
-          }
-          
-          Write-Host "Using signtool: $signtool"
-          Write-Host "Signing with Publisher: CN=AF9F1417-D505-42C3-9840-BEDC19A00F14"
-          
-          # Sign the MSIX package
-          & $signtool sign /fd SHA256 /a /f "certificate.pfx" /p $env:CERT_PASSWORD $msixPath
-          
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Failed to sign MSIX package"
-            exit 1
-          }
-          
-          Write-Host "MSIX package signed successfully"
-          Write-Host "NOTE: For local testing, install the certificate first. For Store submission, Microsoft will re-sign."
-
-      - name: Get Artifacts Paths
-        id: artifacts
-        shell: bash
-        run: |
-          msi=$(ls target/release/bundle/msi/*.msi | head -n 1 || true)
-          exe=$(ls target/release/bundle/nsis/*.exe | head -n 1 || true)
-          msix=$(ls *.msix | head -n 1 || true)
-          echo "msi=$msi" >> $GITHUB_OUTPUT
-          echo "exe=$exe" >> $GITHUB_OUTPUT
-          echo "msix=$msix" >> $GITHUB_OUTPUT
-          echo "MSI: $msi"
-          echo "EXE: $exe"
-          echo "MSIX: $msix"
-
-      - name: Upload MSI Artifact
-        uses: actions/upload-artifact@v4
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: LiveLayer-MSI
-          path: ${{ steps.artifacts.outputs.msi }}
+          tagName: v__VERSION__
+          releaseName: LiveLayer v__VERSION__
+          releaseDraft: true
+          args: ${{ matrix.args }}
 
-      - name: Upload EXE Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: LiveLayer-EXE
-          path: ${{ steps.artifacts.outputs.exe }}
+      - name: Build MSIX with unplated taskbar assets
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: ./scripts/build-msix.ps1
 
-      - name: Upload MSIX Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: LiveLayer-MSIX
-          path: ${{ steps.artifacts.outputs.msix }}
-
-      # --- Create Draft GitHub Release with Artifacts ---
-      - name: Create GitHub Release
+      - name: Attach MSIX package
+        if: matrix.os == 'windows-latest'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: LiveLayer ${{ steps.version.outputs.tag }}
-          body: |
-            ## 🎨 LiveLayer ${{ steps.version.outputs.version }}
-
-            LiveLayer brings beautiful wallpapers and a clock overlay to your desktop.
-
-            ### ✨ Features
-            - **Dynamic Wallpapers**: Support for images, videos, and GIFs
-            - **Live Wallpapers**: Video wallpapers that play behind your desktop
-            - **Date Widget**: Customizable desktop date widget with multiple fonts
-            - **Auto-Change**: Randomized slideshow functionality
-            - **System Tray**: Minimize to system tray for seamless operation
-            - **Cross-Platform**: Windows, macOS, and Linux support
-
-            ### 📥 Download
-            - **Windows Installer (Recommended)**: `LiveLayer_${{ steps.version.outputs.version }}_x64-setup.exe`
-            - **Windows MSI**: `LiveLayer_${{ steps.version.outputs.version }}_x64_en-US.msi`
-            - **Microsoft Store Package (MSIX)**: `LiveLayer_${{ steps.version.outputs.version }}_x64.msix`
-
-            ### 💻 System Requirements
-            - **Windows**: Windows 10 1809 or later
-            - **macOS**: macOS 10.15 or later  
-            - **Linux**: Modern Linux distribution with X11 or Wayland
-
-            ### 🚀 Installation
-            
-            **For EXE/MSI installers:**
-            1. Download the appropriate installer for your system
-            2. Run the installer and follow the setup wizard
-            3. Launch LiveLayer from your applications menu
-
-            **For MSIX (Microsoft Store Submission):**
-            - Download the MSIX file for Microsoft Store submission
-            - The MSIX is self-signed with Publisher: `CN=AF9F1417-D505-42C3-9840-BEDC19A00F14`
-            - Package Identity: `OrigoLabs.LiveLayer`
-            - For local testing: Enable Developer Mode and install the certificate first
-
-            ---
-
-            **Full Changelog**: https://github.com/riteshk-611/livelayer/commits/${{ steps.version.outputs.tag }}
-          prerelease: false
-          files: |
-            ${{ steps.artifacts.outputs.msi }}
-            ${{ steps.artifacts.outputs.exe }}
-            ${{ steps.artifacts.outputs.msix }}
+          tag_name: v${{ steps.version.outputs.version }}
+          files: LiveLayer_${{ steps.version.outputs.version }}_x64.msix
