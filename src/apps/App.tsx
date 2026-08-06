@@ -8,7 +8,7 @@ import {
   AppPersistentState,
 } from "./types/wallpaper";
 import "./index.css";
-import { BsCalendar2Date } from "react-icons/bs";
+import { BsCalendar2Date, BsX } from "react-icons/bs";
 import { LuWallpaper } from "react-icons/lu";
 
 function App() {
@@ -120,15 +120,9 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <div className="header-left">
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <img
-              src="/livelayer.png"
-              alt="LiveLayer Logo"
-              style={{ width: "32px", height: "32px" }}
-            />
-            <h1>livelayer</h1>
-          </div>
+        <div className="header-left" data-tauri-drag-region>
+          <img src="/livelayer.png" alt="LiveLayer Logo" />
+          <h1>livelayer</h1>
         </div>
         <div className="header-actions">
           <label className="autostart-control">
@@ -139,8 +133,8 @@ function App() {
             />
             <span>Auto-start</span>
           </label>
-          <button onClick={hideWindow} className="btn btn-close">
-            Close
+          <button onClick={hideWindow} className="btn btn-close" aria-label="Close to tray">
+            <BsX />
           </button>
         </div>
       </header>
