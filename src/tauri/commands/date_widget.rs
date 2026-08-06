@@ -190,35 +190,37 @@ pub async fn create_date_widget(
         }
     }
 
-    // Set up movement tracking
+    // Save only the final position after a drag has stopped.
     let app_clone = app.clone();
+    let (position_tx, position_rx) = std::sync::mpsc::channel();
     date_window.on_window_event(move |event| {
         if let tauri::WindowEvent::Moved(position) = event {
+            let _ = position_tx.send(*position);
+        }
+    });
+
+    std::thread::spawn(move || {
+        while let Ok(mut pos) = position_rx.recv() {
+            while let Ok(next_pos) = position_rx.recv_timeout(std::time::Duration::from_millis(300)) {
+                pos = next_pos;
+            }
+
             let app_handle = app_clone.clone();
-            let pos = *position;
-            
             let (center_x, center_y) = position_to_center(pos.x as f64, pos.y as f64);
-            
-            std::thread::spawn(move || {
-                tauri::async_runtime::block_on(async move {
-                    if let Ok(current_state) = crate::commands::load_app_state(app_handle.clone()).await {
-                        if let Some(mut widget_settings) = current_state.date_widget_settings {
-                            widget_settings.center_x = center_x;
-                            widget_settings.center_y = center_y;
-                            widget_settings.position_x = pos.x as f64;
-                            widget_settings.position_y = pos.y as f64;
-                            
-                            if let Err(e) = update_date_widget_state(app_handle.clone(), widget_settings).await {
-                                #[cfg(debug_assertions)]
-                                eprintln!("Failed to save center position: {}", e);
-                            }
-                            
+            tauri::async_runtime::block_on(async move {
+                if let Ok(current_state) = crate::commands::load_app_state(app_handle.clone()).await {
+                    if let Some(mut widget_settings) = current_state.date_widget_settings {
+                        widget_settings.center_x = center_x;
+                        widget_settings.center_y = center_y;
+                        widget_settings.position_x = pos.x as f64;
+                        widget_settings.position_y = pos.y as f64;
+
+                        if let Err(e) = update_date_widget_state(app_handle, widget_settings).await {
                             #[cfg(debug_assertions)]
-                            println!("Center position saved: center_x={}, center_y={} (from window pos: x={}, y={})", 
-                                    center_x, center_y, pos.x, pos.y);
+                            eprintln!("Failed to save center position: {}", e);
                         }
                     }
-                });
+                }
             });
         }
     });
