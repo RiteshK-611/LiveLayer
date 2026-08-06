@@ -58,6 +58,12 @@ Download the latest release from the [Releases](https://github.com/riteshk-611/l
 - macOS: `.dmg` or `.app` (Intel and Apple Silicon)
 - Linux: `.AppImage`, `.deb`, or `.rpm`
 
+## Build Workflow
+
+Pushes to `main` create a draft release with Windows, macOS, and Linux packages. Pushes to `develop` build the same packages and upload them as GitHub Actions artifacts without creating a release.
+
+The packages are unsigned and require no repository secrets. Trusted Windows and macOS signing requires certificates from their platform providers; it can be added later when those credentials are available.
+
 ### Build from Source
 
 #### Prerequisites

@@ -2,7 +2,7 @@ name: Build & Release LiveLayer
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
 
 permissions:
   contents: write
@@ -14,12 +14,16 @@ jobs:
       matrix:
         include:
           - os: windows-latest
+            name: windows-x64
             args: ""
           - os: macos-latest
+            name: macos-aarch64
             args: "--target aarch64-apple-darwin"
           - os: macos-latest
+            name: macos-x64
             args: "--target x86_64-apple-darwin"
           - os: ubuntu-22.04
+            name: linux-x64
             args: ""
 
     runs-on: ${{ matrix.os }}
@@ -47,7 +51,9 @@ jobs:
         shell: bash
         run: echo "version=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
 
-      - uses: tauri-apps/tauri-action@v0
+      - name: Publish release packages
+        if: github.ref_name == 'main'
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -56,14 +62,28 @@ jobs:
           releaseDraft: true
           args: ${{ matrix.args }}
 
+      - name: Build development packages
+        if: github.ref_name == 'develop'
+        run: npm run tauri build -- ${{ matrix.args }}
+
       - name: Build MSIX with unplated taskbar assets
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: ./scripts/build-msix.ps1
 
       - name: Attach MSIX package
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest' && github.ref_name == 'main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
           files: LiveLayer_${{ steps.version.outputs.version }}_x64.msix
+
+      - name: Upload development packages
+        if: github.ref_name == 'develop'
+        uses: actions/upload-artifact@v4
+        with:
+          name: LiveLayer-${{ matrix.name }}
+          if-no-files-found: error
+          path: |
+            target/**/bundle/**
+            LiveLayer_${{ steps.version.outputs.version }}_x64.msix
