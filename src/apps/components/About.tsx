@@ -8,7 +8,7 @@ const About: React.FC = () => {
       <div className="section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2.6rem' }}>
         <img src="/livelayer.png" alt="LiveLayer Logo" style={{ width: '80px', height: '80px', marginBottom: '1rem' }} />
         <h2 style={{ fontFamily: '"Borel", cursive', fontSize: '2.5rem', marginBottom: '0.5rem', fontWeight: 400 }}>livelayer</h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Version 2.4.6</p>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Version 2.5.0</p>
 
         <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem', width: '100%' }}>
           <button
