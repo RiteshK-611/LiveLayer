@@ -2,17 +2,19 @@ import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import WallpaperManager from "./components/WallpaperManager";
 import DateWidget from "./components/DateWidget";
+import About from "./components/About";
 import {
   WallpaperSettings,
   DateWidgetSettings,
   AppPersistentState,
 } from "./types/wallpaper";
 import "./index.css";
-import { BsCalendar2Date, BsX } from "react-icons/bs";
+import { BsCalendar2Date, BsInfoCircle } from "react-icons/bs";
 import { LuWallpaper } from "react-icons/lu";
+import { VscChromeClose } from "react-icons/vsc";
 
 function App() {
-  const [activeTab, setActiveTab] = useState<"wallpaper" | "datewidget">(
+  const [activeTab, setActiveTab] = useState<"wallpaper" | "datewidget" | "about">(
     "wallpaper"
   );
   const [autostartEnabled, setAutostartEnabled] = useState(false);
@@ -119,7 +121,17 @@ function App() {
 
   return (
     <div className="app">
-
+      <header className="app-header" data-tauri-drag-region>
+        <div className="header-left" data-tauri-drag-region>
+          <img src="/livelayer.png" alt="logo" data-tauri-drag-region />
+          <h1 data-tauri-drag-region>livelayer</h1>
+        </div>
+        <div className="header-actions">
+          <button className="btn btn-close" onClick={hideWindow} title="Close">
+            <VscChromeClose />
+          </button>
+        </div>
+      </header>
 
       <nav className="tab-navigation">
         <div style={{ display: "flex", flex: 1 }}>
@@ -134,6 +146,12 @@ function App() {
             onClick={() => setActiveTab("datewidget")}>
             <BsCalendar2Date className="tab-icon" />
             Date Widget
+          </button>
+          <button
+            className={`tab-button ${activeTab === "about" ? "active" : ""}`}
+            onClick={() => setActiveTab("about")}>
+            <BsInfoCircle className="tab-icon" />
+            About
           </button>
         </div>
         <div style={{ display: "flex", alignItems: "center" }}>
@@ -160,6 +178,9 @@ function App() {
             settings={dateWidgetSettings}
             onSettingsChange={setDateWidgetSettings}
           />
+        )}
+        {activeTab === "about" && (
+          <About />
         )}
       </main>
     </div>

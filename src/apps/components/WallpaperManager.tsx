@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-dialog";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { open as openShell } from "@tauri-apps/plugin-shell";
 import { WallpaperInfo, WallpaperSettings } from "../types/wallpaper";
-import { FiTrash } from "react-icons/fi";
+import { FiTrash, FiDownload } from "react-icons/fi";
 import { CgFolderAdd } from "react-icons/cg";
 
 interface WallpaperManagerProps {
@@ -86,7 +87,7 @@ const WallpaperManager: React.FC<WallpaperManagerProps> = ({
 
   const handleAddFiles = async () => {
     try {
-      const files = await open({
+      const files = await openDialog({
         multiple: true,
         title: "Select Wallpaper Files",
         filters: [
@@ -329,12 +330,22 @@ const WallpaperManager: React.FC<WallpaperManagerProps> = ({
       <div className="section wallpapers-section">
         <div className="wallpapers-header">
           <span className="wallpapers-label">Wallpapers</span>
-          <button
-            className="icon-btn folder-btn"
-            onClick={handleAddFiles}
-            disabled={loading}>
-            <CgFolderAdd />
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              className="icon-btn wallpaper-section-btn"
+              onClick={() => openShell('https://livelayerapp.com/wallpapers')}
+              title="Get Wallpapers"
+            >
+              <FiDownload />
+            </button>
+            <button
+              className="icon-btn wallpaper-section-btn"
+              onClick={handleAddFiles}
+              disabled={loading}
+              title="Add Wallpaper Files">
+              <CgFolderAdd />
+            </button>
+          </div>
         </div>
 
         {wallpapers.length === 0 ? (
