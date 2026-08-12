@@ -119,12 +119,24 @@ function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <div className="header-left" data-tauri-drag-region>
-          <img src="/livelayer.png" alt="LiveLayer Logo" />
-          <h1>livelayer</h1>
+
+
+      <nav className="tab-navigation">
+        <div style={{ display: "flex", flex: 1 }}>
+          <button
+            className={`tab-button ${activeTab === "wallpaper" ? "active" : ""}`}
+            onClick={() => setActiveTab("wallpaper")}>
+            <LuWallpaper className="tab-icon" />
+            Wallpaper Manager
+          </button>
+          <button
+            className={`tab-button ${activeTab === "datewidget" ? "active" : ""}`}
+            onClick={() => setActiveTab("datewidget")}>
+            <BsCalendar2Date className="tab-icon" />
+            Date Widget
+          </button>
         </div>
-        <div className="header-actions">
+        <div style={{ display: "flex", alignItems: "center" }}>
           <label className="autostart-control">
             <input
               type="checkbox"
@@ -133,25 +145,7 @@ function App() {
             />
             <span>Auto-start</span>
           </label>
-          <button onClick={hideWindow} className="btn btn-close" aria-label="Close to tray">
-            <BsX />
-          </button>
         </div>
-      </header>
-
-      <nav className="tab-navigation">
-        <button
-          className={`tab-button ${activeTab === "wallpaper" ? "active" : ""}`}
-          onClick={() => setActiveTab("wallpaper")}>
-          <LuWallpaper className="tab-icon" />
-          Wallpaper Manager
-        </button>
-        <button
-          className={`tab-button ${activeTab === "datewidget" ? "active" : ""}`}
-          onClick={() => setActiveTab("datewidget")}>
-          <BsCalendar2Date className="tab-icon" />
-          Date Widget
-        </button>
       </nav>
 
       <main className="main-content">
