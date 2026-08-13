@@ -1,6 +1,6 @@
 import React from 'react';
 import { open } from '@tauri-apps/plugin-shell';
-import { FiGithub, FiGlobe, FiHeart, FiDownload } from 'react-icons/fi';
+import { FiGithub, FiGlobe, FiDownload } from 'react-icons/fi';
 
 const About: React.FC = () => {
   return (
