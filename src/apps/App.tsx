@@ -2,17 +2,19 @@ import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import WallpaperManager from "./components/WallpaperManager";
 import DateWidget from "./components/DateWidget";
+import About from "./components/About";
 import {
   WallpaperSettings,
   DateWidgetSettings,
   AppPersistentState,
 } from "./types/wallpaper";
 import "./index.css";
-import { BsCalendar2Date } from "react-icons/bs";
+import { BsCalendar2Date, BsInfoCircle } from "react-icons/bs";
 import { LuWallpaper } from "react-icons/lu";
+import { VscChromeClose } from "react-icons/vsc";
 
 function App() {
-  const [activeTab, setActiveTab] = useState<"wallpaper" | "datewidget">(
+  const [activeTab, setActiveTab] = useState<"wallpaper" | "datewidget" | "about">(
     "wallpaper"
   );
   const [autostartEnabled, setAutostartEnabled] = useState(false);
@@ -119,18 +121,40 @@ function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <div className="header-left">
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <img
-              src="/livelayer.png"
-              alt="LiveLayer Logo"
-              style={{ width: "32px", height: "32px" }}
-            />
-            <h1>livelayer</h1>
-          </div>
+      <header className="app-header" data-tauri-drag-region>
+        <div className="header-left" data-tauri-drag-region>
+          <img src="/livelayer.png" alt="logo" data-tauri-drag-region />
+          <h1 data-tauri-drag-region>livelayer</h1>
         </div>
         <div className="header-actions">
+          <button className="btn btn-close" onClick={hideWindow} title="Close">
+            <VscChromeClose />
+          </button>
+        </div>
+      </header>
+
+      <nav className="tab-navigation">
+        <div style={{ display: "flex", flex: 1 }}>
+          <button
+            className={`tab-button ${activeTab === "wallpaper" ? "active" : ""}`}
+            onClick={() => setActiveTab("wallpaper")}>
+            <LuWallpaper className="tab-icon" />
+            Wallpaper Manager
+          </button>
+          <button
+            className={`tab-button ${activeTab === "datewidget" ? "active" : ""}`}
+            onClick={() => setActiveTab("datewidget")}>
+            <BsCalendar2Date className="tab-icon" />
+            Date Widget
+          </button>
+          <button
+            className={`tab-button ${activeTab === "about" ? "active" : ""}`}
+            onClick={() => setActiveTab("about")}>
+            <BsInfoCircle className="tab-icon" />
+            About
+          </button>
+        </div>
+        <div style={{ display: "flex", alignItems: "center" }}>
           <label className="autostart-control">
             <input
               type="checkbox"
@@ -139,25 +163,7 @@ function App() {
             />
             <span>Auto-start</span>
           </label>
-          <button onClick={hideWindow} className="btn btn-close">
-            Close
-          </button>
         </div>
-      </header>
-
-      <nav className="tab-navigation">
-        <button
-          className={`tab-button ${activeTab === "wallpaper" ? "active" : ""}`}
-          onClick={() => setActiveTab("wallpaper")}>
-          <LuWallpaper className="tab-icon" />
-          Wallpaper Manager
-        </button>
-        <button
-          className={`tab-button ${activeTab === "datewidget" ? "active" : ""}`}
-          onClick={() => setActiveTab("datewidget")}>
-          <BsCalendar2Date className="tab-icon" />
-          Date Widget
-        </button>
       </nav>
 
       <main className="main-content">
@@ -172,6 +178,9 @@ function App() {
             settings={dateWidgetSettings}
             onSettingsChange={setDateWidgetSettings}
           />
+        )}
+        {activeTab === "about" && (
+          <About />
         )}
       </main>
     </div>

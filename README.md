@@ -35,7 +35,7 @@ LiveLayer is a cross-platform desktop application that brings beautiful wallpape
 - **System Tray**: Quick access to key features without opening the main window
   - Show/Hide Settings window
   - Toggle Date Widget
-  - Stop Video Wallpaper
+  - Close Wallpaper
   - Quit application
 - **Auto-start**: Optional auto-start on system boot
 - **Persistent State**: All settings and preferences are saved automatically
@@ -137,7 +137,7 @@ The built application will be available in `src-tauri/target/release/bundle/`.
 **Managing Collection:**
 - Delete individual wallpapers using the trash icon
 - Clear all wallpapers using "Clear All" button
-- Stop video wallpaper playback with "Stop Video Wallpaper" button
+- Close video wallpaper playback with the tray's "Close Wallpaper" option
 
 ### Date Widget
 
@@ -165,7 +165,7 @@ The built application will be available in `src-tauri/target/release/bundle/`.
 - **Show Settings**: Opens the main window
 - **Hide Settings**: Hides the main window
 - **Toggle Date Widget**: Quick toggle for date widget (uses default settings if not configured)
-- **Stop Video Wallpaper**: Stops any playing video wallpaper
+- **Close Wallpaper**: Closes the active video wallpaper
 - **Quit**: Exits the application
 
 **Left-click the tray icon:** Toggles visibility of the main window
@@ -293,7 +293,7 @@ LiveLayer/
 ### Running in Development Mode
 
 ```bash
-npm run dev
+npm run tauri dev
 ```
 
 This starts both the Vite development server and Tauri in development mode with hot-reload enabled.

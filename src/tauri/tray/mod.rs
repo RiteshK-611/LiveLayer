@@ -13,7 +13,7 @@ pub fn create_tray_menu(app: &tauri::App) -> tauri::Result<()> {
     let stop_video = MenuItem::with_id(
         app,
         "stop_video",
-        "Stop Video Wallpaper",
+        "Close Wallpaper",
         true,
         None::<&str>,
     )?;
